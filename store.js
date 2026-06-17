@@ -40,15 +40,22 @@
 
   const nowHM = () => { const d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
   let attSeq = 100;
+
+  // ---- 現場報告（iPhone → iPad指摘で確認 → Web帳票管理） ----
+  let repSeq = 7000;
+  const reports = [
+    // 既に届いている確認待ちの報告（デモ用シード）
+    { id: "RP-" + (++repSeq), kind: "board", comment: "2F-S2 配力筋ピッチを@200で施工完了。黒板付きで報告します。", by: "中村 拓也", company: "中村鉄筋工業", role: "協力会社ユーザー", site: "湾岸ロジ新築", location: "2F 西側 スラブ S2", bbId: "BB-1043", hue: 158, takenAt: "2026/06/16 08:55", status: "pending", confirmedAt: null, confirmedBy: null },
+  ];
   const attendance = [
     { id: "AT-1", user: "高橋 由紀", role: "現場作業者", date: "2026/06/16", clockIn: "07:55", clockOut: "17:10", status: "done" },
     { id: "AT-2", user: "佐藤 健一", role: "現場責任者", date: "2026/06/16", clockIn: "08:02", clockOut: null, status: "working" },
     { id: "AT-3", user: "中村 拓也", role: "協力会社", date: "2026/06/15", clockIn: "08:10", clockOut: "16:40", status: "done" },
   ];
 
-  let state = { tasks, photos, attendance };
+  let state = { tasks, photos, attendance, reports };
   const listeners = new Set();
-  const emit = () => { state = { tasks: state.tasks, photos: state.photos, attendance: state.attendance }; listeners.forEach(l => l()); };
+  const emit = () => { state = { tasks: state.tasks, photos: state.photos, attendance: state.attendance, reports: state.reports }; listeners.forEach(l => l()); };
 
   window.PhotoStore = {
     get: () => state,
@@ -82,6 +89,23 @@
         const stillHas = state.photos.some(p => p.taskId === ph.taskId);
         if (!stillHas) state.tasks = state.tasks.map(t => t.id === ph.taskId ? { ...t, status: "none" } : t);
       }
+      emit();
+    },
+    // iPhone 現場報告を送信 → iPadの指摘で確認待ち
+    submitReport: (rep) => {
+      const r = { id: "RP-" + (++repSeq), status: "pending", confirmedAt: null, confirmedBy: null, takenAt: "2026/06/16 09:45", ...rep };
+      state.reports = [r, ...state.reports];
+      emit();
+      return r;
+    },
+    // iPad指摘で確認 → Web帳票管理へ反映
+    confirmReport: (id, by) => {
+      state.reports = state.reports.map(r => r.id === id ? { ...r, status: "confirmed", confirmedAt: "2026/06/16 10:30", confirmedBy: by || "田中 美咲" } : r);
+      emit();
+    },
+    // iPad指摘で差戻し → 報告を削除（iPhoneで再報告）
+    rejectReport: (id) => {
+      state.reports = state.reports.filter(r => r.id !== id);
       emit();
     },
     // iPhone 出勤 → Web 勤怠履歴に記録

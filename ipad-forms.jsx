@@ -28,8 +28,10 @@ function BigChoice({ icon, title, sub, tone, badge, onClick }) {
 }
 
 /* 指摘ホーム */
-function IssueHome({ openReport, openDetail }) {
+function IssueHome({ openReport, openDetail, flash }) {
   const M = window.MOCK;
+  const store = usePhotoStore();
+  const pendingReports = (store.reports || []).filter(r => r.status === "pending");
   const PIN_ST = window.PIN_STATUS;
   const [fil, setFil] = useStateIf({ location: "all", site: "all", status: "all" });
   const setF = (k, v) => setFil(p => ({ ...p, [k]: v }));
@@ -48,6 +50,41 @@ function IssueHome({ openReport, openDetail }) {
         <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: "calc(17px * var(--field-scale))" }}>是正報告書を作成</div><div style={{ fontSize: "calc(12px * var(--field-scale))", color: "var(--ink-3)", marginTop: 2 }}>図面でPinを立て、指摘コメントを記入</div></div>
         <Icon name="chevR" size={20} color="var(--ink-4)" />
       </button>
+
+      {/* 現場（iPhone）からの報告 — 確認待ち */}
+      {pendingReports.length > 0 && (
+        <div>
+          <div className="row spread" style={{ marginBottom: 10 }}>
+            <span style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 700, color: "var(--ink-3)" }}>現場からの報告（確認待ち）</span>
+            <span className="chip" style={{ background: "var(--st-pending-soft)", color: "var(--st-pending)" }}><span className="dot" style={{ background: "var(--st-pending)" }}></span>{pendingReports.length} 件</span>
+          </div>
+          <div className="col gap-10">
+            {pendingReports.map(r => { const b = r.bbId ? M.blackboards.find(x => x.id === r.bbId) : null; return (
+              <div key={r.id} className="card fade-up" style={{ padding: 14 }}>
+                <div className="row gap-12" style={{ alignItems: "flex-start" }}>
+                  <div style={{ position: "relative", width: 124, aspectRatio: "4/3", borderRadius: 8, overflow: "hidden", flex: "none", boxShadow: "var(--sh-1)" }}>
+                    <PhotoFrame hue={r.hue} rounded={0} style={{ position: "absolute", inset: 0 }} />
+                    {b && <div style={{ position: "absolute", right: 4, bottom: 4, width: "50%" }}><Blackboard data={b} scale={0.42} variant="compact" /></div>}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="row gap-6" style={{ marginBottom: 4 }}>
+                      <span className="chip" style={{ background: r.kind === "board" ? "var(--accent-soft)" : "var(--bg-2)", color: r.kind === "board" ? "var(--accent-ink)" : "var(--ink-3)", fontSize: 11 }}>{r.kind === "board" ? "黒板付き" : "原図のまま"}</span>
+                      <span className="mono muted" style={{ fontSize: 11 }}>{r.id}</span>
+                    </div>
+                    <div style={{ fontSize: "calc(13px * var(--field-scale))", lineHeight: 1.5 }}>{r.comment}</div>
+                    <div className="num muted" style={{ fontSize: 11, marginTop: 6 }}>{r.by}（{r.company}） ・ {r.location} ・ {r.takenAt.slice(11)}</div>
+                  </div>
+                </div>
+                <div className="row gap-8" style={{ marginTop: 12 }}>
+                  <button className="btn danger" style={{ flex: 1 }} onClick={() => { window.PhotoStore.rejectReport(r.id); flash && flash("報告を差戻しました（iPhoneで再報告）"); }}><Icon name="redo" size={15} color="var(--st-redo)" />差戻し</button>
+                  <button className="btn primary" style={{ flex: 2, background: "var(--st-approved)", borderColor: "var(--st-approved)" }} onClick={() => { window.PhotoStore.confirmReport(r.id, "田中 美咲"); flash && flash("確認しました。Web帳票管理へ反映しました"); }}><Icon name="check" size={16} />確認して帳票管理へ</button>
+                </div>
+              </div>
+            ); })}
+          </div>
+        </div>
+      )}
+
       <div>
         <div style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 700, color: "var(--ink-3)", marginBottom: 10 }}>指摘履歴</div>
         <div className="row gap-10 wrap" style={{ marginBottom: 12, alignItems: "center" }}>

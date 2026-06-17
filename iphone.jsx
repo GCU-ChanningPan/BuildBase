@@ -192,6 +192,127 @@ function PhoneIssueResp({ issue, onBack, onDone }) {
   );
 }
 
+/* 設定トグル */
+function ProfileToggle({ label, sub, on, onToggle }) {
+  return (
+    <button onClick={onToggle} className="row spread" style={{ width: "100%", border: "none", background: "none", padding: "12px 12px", cursor: "pointer", textAlign: "left" }}>
+      <span style={{ minWidth: 0 }}><span style={{ fontSize: "calc(13.5px * var(--field-scale))", fontWeight: 600 }}>{label}</span>{sub && <span className="muted" style={{ display: "block", fontSize: "calc(11px * var(--field-scale))", marginTop: 1 }}>{sub}</span>}</span>
+      <span style={{ width: 44, height: 26, borderRadius: 999, background: on ? "var(--st-approved)" : "var(--line)", position: "relative", transition: "background .15s", flex: "none" }}><span style={{ position: "absolute", top: 2, left: on ? 20 : 2, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .15s", boxShadow: "0 1px 2px rgba(0,0,0,.2)" }}></span></span>
+    </button>
+  );
+}
+
+/* 個人アカウント画面（アイコン・各種設定の変更） */
+function PhoneProfile({ profile, setProfile, onBack, flash }) {
+  const M = window.MOCK;
+  const [d, setD] = useStatePh({ ...profile });
+  const f = (k, v) => setD(p => ({ ...p, [k]: v }));
+  const COLORS = [["var(--accent-soft)", "var(--accent-ink)"], ["#ffe3d2", "#b4480f"], ["#d7f0dd", "#1c7a3e"], ["#e6ddff", "#5a3bb0"], ["#ffe1ee", "#b0285e"], ["#d6eefb", "#1c6aa8"]];
+  const ROLES = (M.roles || ["現場作業者", "現場責任者", "協力会社ユーザー"]);
+  const SITES = ["湾岸ロジ新築", "城南第一マンション", "中央区庁舎"];
+  const save = () => { setProfile(d); flash && flash("プロフィールを更新しました"); onBack(); };
+  return (
+    <div className="col" style={{ height: "100%" }}>
+      <FieldTopBar title="アカウント" onBack={onBack} online={true} setOnline={() => {}} queue={0} />
+      <div className="col" style={{ flex: 1, overflow: "auto", padding: 16, gap: 16, background: "var(--bg)" }}>
+        {/* アイコン編集 */}
+        <div className="col center" style={{ gap: 12 }}>
+          <div className="center" style={{ width: 96, height: 96, borderRadius: "50%", background: d.color, color: d.textColor, fontWeight: 800, fontSize: 38, position: "relative" }}>{d.initial}
+            <span className="center" style={{ position: "absolute", right: -2, bottom: -2, width: 30, height: 30, borderRadius: "50%", background: "var(--accent)", border: "2px solid #fff" }}><Icon name="camera" size={15} color="#fff" /></span>
+          </div>
+          <button className="btn sm" onClick={() => flash && flash("写真ライブラリから選択（デモ）")}><Icon name="camera" size={14} />写真をアップロード</button>
+          <div className="col gap-8" style={{ width: "100%" }}>
+            <div className="muted" style={{ fontSize: "calc(12px * var(--field-scale))", fontWeight: 700 }}>アイコンの色</div>
+            <div className="row gap-8 wrap">
+              {COLORS.map(([bg, fg]) => <button key={bg} onClick={() => setD(p => ({ ...p, color: bg, textColor: fg }))} className="center" style={{ width: 40, height: 40, borderRadius: "50%", background: bg, color: fg, fontWeight: 800, border: d.color === bg ? "2.5px solid var(--accent)" : "2px solid var(--line)", cursor: "pointer" }}>{d.color === bg ? <Icon name="check" size={16} color={fg} /> : (d.initial || "A")}</button>)}
+            </div>
+          </div>
+        </div>
+        {/* プロフィール項目 */}
+        <div className="card" style={{ padding: 14 }}>
+          <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>表示名
+            <input className="inp" value={d.name} onChange={e => f("name", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }} />
+          </label>
+          <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))", marginTop: 10 }}>イニシャル（アイコン文字）
+            <input className="inp" maxLength={2} value={d.initial} onChange={e => f("initial", e.target.value.slice(0, 2))} style={{ fontSize: "calc(14px * var(--field-scale))", width: 96 }} />
+          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+            <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>役割<select className="inp" value={d.role} onChange={e => f("role", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }}>{ROLES.map(r => <option key={r}>{r}</option>)}</select></label>
+            <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>現場<select className="inp" value={d.site} onChange={e => f("site", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }}>{SITES.map(s => <option key={s}>{s}</option>)}</select></label>
+          </div>
+          <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))", marginTop: 10 }}>会社<input className="inp" value={d.company} onChange={e => f("company", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }} /></label>
+          <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))", marginTop: 10 }}>メール<input className="inp" type="email" value={d.email} onChange={e => f("email", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }} /></label>
+          <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))", marginTop: 10 }}>電話<input className="inp" value={d.phone} onChange={e => f("phone", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }} /></label>
+        </div>
+        {/* 通知設定 */}
+        <div className="card" style={{ padding: 4 }}>
+          <ProfileToggle label="撮影タスクの通知" sub="新しいタスク・期限のお知らせ" on={d.notifyTask} onToggle={() => f("notifyTask", !d.notifyTask)} />
+          <div style={{ height: 1, background: "var(--line-2)", margin: "0 12px" }}></div>
+          <ProfileToggle label="指摘・差戻しの通知" sub="是正依頼が届いたとき" on={d.notifyIssue} onToggle={() => f("notifyIssue", !d.notifyIssue)} />
+        </div>
+        <button className="btn lg" style={{ width: "100%", borderColor: "var(--st-redo)", color: "var(--st-redo)" }} onClick={() => flash && flash("ログアウトしました（デモ）")}><Icon name="redo" size={16} color="var(--st-redo)" />ログアウト</button>
+      </div>
+      <div className="row gap-10" style={{ padding: 14, borderTop: "1px solid var(--line)", background: "var(--surface)", flex: "none" }}>
+        <button className="btn lg" style={{ flex: 1 }} onClick={onBack}>キャンセル</button>
+        <button className="btn primary lg" style={{ flex: 2 }} onClick={save}><Icon name="check" size={17} />保存する</button>
+      </div>
+    </div>
+  );
+}
+
+/* 現場報告（黒板作成 or 原図 ＋ 音声/手書きコメント → iPad指摘へ送信） */
+function PhoneReport({ profile, onBack, onDone }) {
+  const M = window.MOCK;
+  const [kind, setKind] = useStatePh("board"); // board=黒板を作成 / raw=原図のまま
+  const [shot, setShot] = useStatePh(false);
+  const [hw, setHw] = useStatePh("");
+  const [comment, setComment] = useStatePh("");
+  const hue = 150 + (comment.length % 6) * 14;
+  const board = { ...(M.blackboards[0]), name: "現場報告 黒板", subcategory: "現場報告", shooter: profile.name };
+  const submit = () => {
+    window.PhotoStore.submitReport({ kind, comment: comment.trim(), by: profile.name, company: profile.company, role: profile.role, site: profile.site, location: profile.site + " 現場", bbId: kind === "board" ? board.id : null, hue });
+    onDone("iPadの指摘へ報告を送信しました（確認待ち）");
+  };
+  return (
+    <div className="col" style={{ height: "100%" }}>
+      <FieldTopBar title="報告を作成" onBack={onBack} online={true} setOnline={() => {}} queue={0} />
+      <div className="col" style={{ flex: 1, overflow: "auto", padding: 16, gap: 14, background: "var(--bg)" }}>
+        {/* 報告の種類 */}
+        <div className="col gap-8">
+          <div className="row gap-6" style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 700, color: "var(--ink-3)" }}><Icon name="board" size={15} />報告の種類を選択</div>
+          <div className="row gap-10">
+            {[["board", "黒板を作成", "board"], ["raw", "原図のまま", "camera"]].map(([k, label, ic]) => (
+              <button key={k} onClick={() => setKind(k)} className="card" style={{ flex: 1, padding: 14, cursor: "pointer", border: kind === k ? "2px solid var(--accent)" : "2px solid var(--line)", background: kind === k ? "var(--accent-soft)" : "var(--surface)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                <Icon name={ic} size={22} color={kind === k ? "var(--accent-ink)" : "var(--ink-3)"} />
+                <span style={{ fontWeight: 700, fontSize: "calc(13px * var(--field-scale))", color: kind === k ? "var(--accent-ink)" : "var(--ink-2)" }}>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* 写真 */}
+        <div className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>写真
+          <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", boxShadow: "var(--sh-2)", marginTop: 4, background: "var(--bg-2)" }}>
+            {shot ? <React.Fragment>
+              <PhotoFrame hue={hue} rounded={12} style={{ position: "absolute", inset: 0 }} />
+              {kind === "board" && <div style={{ position: "absolute", right: 10, bottom: 10, width: "42%" }}><Blackboard data={board} scale={0.6} variant="compact" /></div>}
+              <button className="btn sm" onClick={() => setShot(false)} style={{ position: "absolute", top: 8, right: 8 }}><Icon name="redo" size={13} />撮り直す</button>
+            </React.Fragment> : <button onClick={() => setShot(true)} className="col center" style={{ position: "absolute", inset: 0, border: "none", background: "none", cursor: "pointer", color: "var(--ink-4)", gap: 8 }}><Icon name="camera" size={34} color="var(--ink-4)" /><span style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 600 }}>タップして撮影</span></button>}
+          </div>
+        </div>
+        {/* コメント（音声/手書き） */}
+        <HandwritePad fieldKey="report" label="報告コメント" value={hw} onChange={(url) => { setHw(url); if (url && !comment) setComment("現場の状況を報告します。"); }} onText={(t) => setComment(t)} voiceSample="配筋検査、所定のピッチで施工完了。是正箇所はありません。" />
+        <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>コメント（認識結果・修正可）
+          <textarea className="inp" rows={3} value={comment} onChange={e => setComment(e.target.value)} placeholder="音声入力・手書き、または直接入力できます" style={{ fontSize: "calc(14px * var(--field-scale))" }} />
+        </label>
+      </div>
+      <div className="row gap-10" style={{ padding: 14, borderTop: "1px solid var(--line)", background: "var(--surface)", flex: "none" }}>
+        <button className="btn lg" style={{ flex: 1 }} onClick={onBack}>キャンセル</button>
+        <button className="btn primary lg" style={{ flex: 2, opacity: comment.trim() ? 1 : .5 }} disabled={!comment.trim()} onClick={submit}><Icon name="send" size={17} color="#fff" />iPadへ報告を送信</button>
+      </div>
+    </div>
+  );
+}
+
 function PhoneApp({ tweaks }) {
   const store = usePhotoStore();
   const M = window.MOCK;
@@ -206,9 +327,10 @@ function PhoneApp({ tweaks }) {
   const myIssues = (M.issues || []).filter(i => i.status !== "done");
   const [toast, setToast] = useStatePh(null);
   const flash = (m) => { setToast(m); setTimeout(() => setToast(null), 2800); };
+  const [profile, setProfile] = useStatePh({ name: "山本 涼", initial: "山", role: "現場作業者", site: "湾岸ロジ新築", company: "大和建設", email: "yamamoto@daiwa-const.co.jp", phone: "090-1234-5678", color: "var(--accent-soft)", textColor: "var(--accent-ink)", notifyTask: true, notifyIssue: true });
 
   const tasks = store.tasks;
-  const me = "山本 涼";
+  const me = profile.name;
   const myAtt = (store.attendance || []).find(a => a.user === me && a.status === "working");
 
   // 出勤ゲート：未出勤ならアカウント＋大きな出勤ボタンを表示
@@ -217,9 +339,9 @@ function PhoneApp({ tweaks }) {
       <div className="col" style={{ height: "100%", background: "var(--bg)", position: "relative" }}>
         <div className="col center" style={{ flex: 1, padding: "8px 28px 28px", gap: 0, textAlign: "center" }}>
           <img src="assets/buildbase-logo.png" alt="BuildBase" style={{ width: "78%", maxWidth: 290, objectFit: "contain", marginBottom: 26 }} />
-          <div className="center" style={{ width: 92, height: 92, borderRadius: "50%", background: "var(--accent-soft)", color: "var(--accent-ink)", fontWeight: 800, fontSize: 36, marginBottom: 18 }}>山</div>
-          <div style={{ fontWeight: 800, fontSize: "calc(22px * var(--field-scale))", whiteSpace: "nowrap" }}>山本 涼</div>
-          <div className="muted" style={{ fontSize: "calc(13px * var(--field-scale))", marginTop: 4 }}>現場作業者 ・ 湾岸ロジ新築</div>
+          <div className="center" style={{ width: 92, height: 92, borderRadius: "50%", background: profile.color, color: profile.textColor, fontWeight: 800, fontSize: 36, marginBottom: 18 }}>{profile.initial}</div>
+          <div style={{ fontWeight: 800, fontSize: "calc(22px * var(--field-scale))", whiteSpace: "nowrap" }}>{profile.name}</div>
+          <div className="muted" style={{ fontSize: "calc(13px * var(--field-scale))", marginTop: 4 }}>{profile.role} ・ {profile.site}</div>
           <div className="num" style={{ fontSize: "calc(13px * var(--field-scale))", color: "var(--ink-3)", marginTop: 18 }}>2026/06/16（火）</div>
           <div className="num" style={{ fontSize: "calc(44px * var(--field-scale))", fontWeight: 800, letterSpacing: ".02em", marginTop: 2 }}>9:41</div>
           <button className="btn primary" style={{ marginTop: 30, width: "min(280px, 80%)", height: 64, fontSize: "calc(18px * var(--field-scale))", borderRadius: 16 }} onClick={() => { window.PhotoStore.clockIn(me, "現場作業者"); flash("出勤しました。今日も安全第一で。"); }}>
@@ -257,19 +379,23 @@ function PhoneApp({ tweaks }) {
         onSave={() => { window.PhotoStore.shoot(task.id, { hue: 150 + (task.id.charCodeAt(task.id.length - 1) % 6) * 16, takenAt: "2026/06/16 09:42" }); flash("iPadへ送信しました（確認待ち）"); setScreen("list"); }} />
     </div>;
   }
+  if (screen === "profile") {
+    return <PhoneProfile profile={profile} setProfile={setProfile} onBack={() => setScreen("list")} flash={flash} />;
+  }
+  if (screen === "report") {
+    return <PhoneReport profile={profile} onBack={() => setScreen("list")} onDone={(m) => { flash(m); setScreen("list"); }} />;
+  }
 
   return (
     <div className="col" style={{ height: "100%", background: "var(--bg)", position: "relative" }}>
       {/* header */}
       <div className="col" style={{ flex: "none", background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
         <div className="row spread" style={{ padding: "12px 16px 8px" }}>
-          <div className="row gap-8" style={{ minWidth: 0 }}>
-            <div className="center" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--accent-soft)", color: "var(--accent-ink)", fontWeight: 800, fontSize: 14, flex: "none" }}>山</div>
-            <div style={{ minWidth: 0 }}><div style={{ fontWeight: 800, fontSize: "calc(15px * var(--field-scale))", lineHeight: 1.1 }}>山本 涼</div><div className="muted" style={{ fontSize: "calc(10.5px * var(--field-scale))" }}>現場作業者 ・ 湾岸ロジ新築</div></div>
-          </div>
-          {myAtt
-            ? <span className="chip" style={{ background: "var(--st-approved-soft)", color: "var(--st-approved)" }}><span className="dot" style={{ background: "var(--st-approved)" }}></span>出勤中 {myAtt.clockIn}</span>
-            : <button className="btn primary sm" onClick={() => { window.PhotoStore.clockIn(me, "現場作業者"); flash("出勤を記録しました"); }}><Icon name="clock" size={15} color="#fff" />出勤</button>}
+          <button onClick={() => setScreen("profile")} className="row gap-8" style={{ minWidth: 0, border: "none", background: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+            <div className="center" style={{ width: 34, height: 34, borderRadius: "50%", background: profile.color, color: profile.textColor, fontWeight: 800, fontSize: 14, flex: "none" }}>{profile.initial}</div>
+            <div style={{ minWidth: 0 }}><div style={{ fontWeight: 800, fontSize: "calc(15px * var(--field-scale))", lineHeight: 1.1 }}>{profile.name}</div><div className="muted" style={{ fontSize: "calc(10.5px * var(--field-scale))" }}>{profile.role} ・ {profile.site}</div></div>
+          </button>
+          <button className="btn ghost sm" onClick={() => setScreen("profile")} title="アカウント"><Icon name="gear" size={20} /></button>
         </div>
       </div>
 
@@ -321,6 +447,11 @@ function PhoneApp({ tweaks }) {
             </div>}
           </div>
         ); })}
+
+        {/* 現場報告 */}
+        <button className="btn primary lg" style={{ width: "100%", marginTop: 8 }} onClick={() => setScreen("report")}>
+          <Icon name="send" size={17} color="#fff" />報告を作成（黒板 / 原図 ＋ コメント）
+        </button>
 
         <div className="row gap-6" style={{ alignItems: "center", marginTop: 8, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
           <span style={{ fontWeight: 800, fontSize: "calc(13px * var(--field-scale))" }}>送信済</span>

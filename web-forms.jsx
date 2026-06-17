@@ -121,7 +121,7 @@ function SubmissionDrawer({ sub, onClose, onOutput }) {
           <div style={{ background: "#fff", border: "1px solid #cbd2da", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
             {/* ledger title bar */}
             <div style={{ borderBottom: "1px solid #cbd2da", padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, background: "#f7f9fb" }}>
-              <span style={{ fontWeight: 800, fontSize: 14 }}>{isLedger ? (sub.ledgerType || "工事写真台帳") : "是正報告書"}</span>
+              <span style={{ fontWeight: 800, fontSize: 14 }}>{isLedger ? (sub.ledgerType || "工事写真台帳") : (sub.type === "現場報告" ? "現場報告書" : "是正報告書")}</span>
               <span className="muted" style={{ fontSize: 11.5 }}>{M.project.name}</span>
               <span className="muted" style={{ fontSize: 11.5, marginLeft: "auto" }}>{sub.id}</span>
             </div>
@@ -231,6 +231,7 @@ function CreateSubmissionModal({ onClose, onCreate }) {
 
 function FormSubmissions({ pushToast }) {
   const M = window.MOCK;
+  const store = usePhotoStore();
   const [subs, setSubs] = useStateFm(M.submissions.map(s => ({ ...s })));
   const [type, setType] = useStateFm("all");
   const [status, setStatus] = useStateFm("all");
@@ -239,7 +240,19 @@ function FormSubmissions({ pushToast }) {
   const [sel, setSel] = useStateFm([]);
   const [creating, setCreating] = useStateFm(false);
   const [newId, setNewId] = useStateFm(null);
-  const list = subs.filter(s => (type === "all" || s.type === type));
+  // iPadで確認された現場報告（iPhone由来）を帳票として取り込む
+  const reportSubs = (store.reports || []).filter(r => r.status === "confirmed").map(r => ({
+    id: r.id, templateId: "FT-RPT", type: "現場報告",
+    title: (r.kind === "board" ? "黒板付き現場報告" : "現場報告") + " — " + r.location,
+    project: M.project.name, author: r.by, company: r.company,
+    date: (r.confirmedAt || r.takenAt || "2026/06/16").slice(0, 10),
+    photos: 1, location: r.location, status: "approved", drawingId: "DWG-201",
+    overall: r.comment,
+    pins: [{ x: 46, y: 50, st: "done", worker: r.by, comment: r.comment, photos: [r.hue] }],
+    fromField: true,
+  }));
+  const allSubs = [...reportSubs, ...subs];
+  const list = allSubs.filter(s => (type === "all" || s.type === type));
   const visibleIds = list.map(s => s.id);
   const allSel = visibleIds.length > 0 && visibleIds.every(id => sel.includes(id));
   const toggleSel = (id) => setSel(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
@@ -255,7 +268,7 @@ function FormSubmissions({ pushToast }) {
         <React.Fragment>
         <div className="row gap-12" style={{ padding: "0 26px 12px", flexWrap: "wrap", alignItems: "center" }}>
           <Icon name="filter" size={15} color="var(--ink-4)" />
-          <label className="row gap-6" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-3)" }}>種類<select className="inp" style={{ width: "auto", padding: "5px 8px", fontSize: 12.5 }} value={type} onChange={e => setType(e.target.value)}><option value="all">すべて</option>{M.FORM_TYPES.map(t => <option key={t}>{t}</option>)}</select></label>
+          <label className="row gap-6" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-3)" }}>種類<select className="inp" style={{ width: "auto", padding: "5px 8px", fontSize: 12.5 }} value={type} onChange={e => setType(e.target.value)}><option value="all">すべて</option>{[...M.FORM_TYPES, "現場報告"].map(t => <option key={t}>{t}</option>)}</select></label>
           <span className="muted" style={{ fontSize: 12, fontWeight: 600 }}>{list.length} 件</span>
           {sel.length > 0 && <div className="row gap-8" style={{ marginLeft: "auto", alignItems: "center" }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-ink)" }}>{sel.length} 件選択</span>

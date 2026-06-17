@@ -525,7 +525,7 @@ function FieldApp({ tweaks }) {
   else if (screen === "preview") body = <PreviewScreen shot={shot} online={online} onBack={() => setScreen("camera")} onRetake={() => setScreen("camera")}
     onSave={() => { if (online) { setQueue(0); flash("アップロードして自動同期しました"); } else { setQueue(q => q + 1); flash("オフライン保存しました（オンライン復帰時に自動同期）"); } go("tasks"); }} />;
   else if (screen === "redo") body = <RedoScreen onBack={() => go("tasks")} onReshoot={(p) => startCamera(window.MOCK.blackboards.find(b => b.id === p.bbId))} />;
-  else if (screen === "forms") body = <window.FieldForms.IssueHome openReport={() => setScreen("ireport")} openDetail={(iss) => { setBoard(iss); setScreen("idetail"); }} />;
+  else if (screen === "forms") body = <window.FieldForms.IssueHome flash={flash} openReport={() => setScreen("ireport")} openDetail={(iss) => { setBoard(iss); setScreen("idetail"); }} />;
   else if (screen === "ireport") body = <window.FieldForms.IssueReport onBack={() => go("forms")} onSubmit={(m) => { flash(m); go("forms"); }} />;
   else if (screen === "broadcast") body = <window.BroadcastScreen />;
   else if (screen === "idetail") body = <window.FieldForms.IssueDetail issue={board} onBack={() => go("forms")} onSubmit={(m) => { flash(m); go("forms"); }} />;
