@@ -1,0 +1,9 @@
+{
+  "name": "buildbase",
+  "version": "0.1.0",
+  "private": true,
+  "description": "電子黒板 / 工事写真管理 プロトタイプ",
+  "scripts": {
+    "start": "node start.js"
+  }
+}
