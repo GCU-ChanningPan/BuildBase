@@ -1,0 +1,179 @@
+/* ============================================================
+   電子黒板付き工事写真管理機能 — Design tokens & base
+   Aesthetic: modern, clean construction-DX SaaS.
+   Blueprint-blue accent · chalkboard-green 黒板 · paper-cool surfaces.
+   ============================================================ */
+
+:root {
+  /* Brand / accent — overridable by Tweaks via --accent */
+  --accent: #2f57e6;
+  --accent-ink: #1c3bb0;
+  --accent-soft: #eaeefe;
+  --accent-soft-2: #d8e0fd;
+
+  /* Neutrals — cool paper */
+  --ink: #131820;
+  --ink-2: #3b4453;
+  --ink-3: #69727f;
+  --ink-4: #98a1ad;
+  --line: #e6e9ef;
+  --line-2: #eef1f5;
+  --surface: #ffffff;
+  --bg: #f4f6f9;
+  --bg-2: #eceff4;
+
+  /* Status colors (per spec) */
+  --st-none: #9aa4b2;      /* 未撮影 グレー */
+  --st-shooting: #2d6be0;  /* 撮影中 ブルー */
+  --st-pending: #f59e0b;   /* 確認待ち オレンジ */
+  --st-approved: #16a34a;  /* 確認済み グリーン */
+  --st-redo: #e23d3d;      /* 再撮影 レッド */
+  --st-void: #4b5563;      /* 無効 ダークグレー */
+  --st-unsync: #8b5cf6;    /* 未同期 パープル */
+
+  --st-none-soft: #eef1f5;
+  --st-shooting-soft: #e7f0fd;
+  --st-pending-soft: #fdf3e1;
+  --st-approved-soft: #e6f5ec;
+  --st-redo-soft: #fce9e9;
+  --st-void-soft: #e9ebee;
+  --st-unsync-soft: #f1ebfd;
+
+  /* Chalkboard 黒板 */
+  --board-green: #2c5249;
+  --board-green-2: #25453d;
+  --board-chalk: #f4f1e8;
+  --board-line: rgba(244,241,232,0.55);
+
+  /* Radii & shadow */
+  --r-xs: 6px;
+  --r-sm: 9px;
+  --r-md: 13px;
+  --r-lg: 18px;
+  --r-xl: 26px;
+  --sh-1: 0 1px 2px rgba(19,24,32,.05), 0 1px 1px rgba(19,24,32,.04);
+  --sh-2: 0 2px 6px rgba(19,24,32,.06), 0 1px 2px rgba(19,24,32,.05);
+  --sh-3: 0 8px 28px rgba(19,24,32,.10), 0 2px 6px rgba(19,24,32,.06);
+  --sh-4: 0 20px 60px rgba(19,24,32,.18), 0 6px 16px rgba(19,24,32,.10);
+
+  /* Field (iPad) font scale — overridable by Tweaks */
+  --field-scale: 1;
+
+  --font-jp: "Noto Sans JP", system-ui, sans-serif;
+  --font-en: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-jp);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body { background: #20242c; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #c8cdd6; border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #aab1bd; background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.num { font-family: var(--font-en); font-feature-settings: "tnum" 1; }
+.mono { font-family: var(--font-mono); }
+
+/* Generic helpers */
+.row { display: flex; align-items: center; }
+.col { display: flex; flex-direction: column; }
+/* Admin screens must scroll internally, not grow past the window frame */
+.web-body > .col { min-height: 0; }
+.gap-4 { gap: 4px; } .gap-6 { gap: 6px; } .gap-8 { gap: 8px; }
+.gap-10 { gap: 10px; } .gap-12 { gap: 12px; } .gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; } .gap-24 { gap: 24px; }
+.spread { justify-content: space-between; }
+.center { align-items: center; justify-content: center; }
+.wrap { flex-wrap: wrap; }
+.fill { flex: 1; }
+.muted { color: var(--ink-3); }
+.faint { color: var(--ink-4); }
+
+/* Status chip */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; line-height: 1;
+  padding: 5px 9px 5px 8px; border-radius: 999px; white-space: nowrap;
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: var(--r-sm);
+  transition: background .12s, border-color .12s, transform .04s, box-shadow .12s;
+}
+.btn:hover { background: var(--bg); }
+.btn:active { transform: translateY(.5px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost:hover { background: var(--bg-2); }
+.btn.sm { font-size: 12px; padding: 6px 10px; }
+.btn.lg { font-size: 15px; padding: 12px 20px; }
+/* 黒板タスク：現場タップしやすい拡大ボタン */
+.fieldbig .btn { font-size: 16px; padding: 13px 20px; gap: 9px; }
+.fieldbig .btn.sm { font-size: 15px; padding: 11px 16px; }
+.fieldbig .btn.lg { font-size: 18px; padding: 16px 26px; }
+.fieldbig .btn.ghost.sm { padding: 10px 12px; }
+.fieldbig select.inp { padding: 16px 12px; font-size: 15px; }
+.fieldbig .fil-sel select.inp { padding: 16px 12px; }
+.btn.danger { color: var(--st-redo); border-color: #f3cfcf; background: var(--st-redo-soft); }
+.btn.danger:hover { background: #f9dede; }
+
+/* Cards */
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md); box-shadow: var(--sh-1);
+}
+
+/* Fade/slide entrance — never animates opacity to/from 0 on persistent
+   content (a backgrounded iframe pauses animations and would hold the
+   hidden frame), so resting state is always visible. */
+@keyframes fadeUp { from { transform: translateY(10px); } to { transform: none; } }
+.fade-up { animation: fadeUp .28s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fadeIn .2s ease both; }
+@keyframes popIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+.pop-in { animation: popIn .18s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes slideL { from { transform: translateX(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+/* Tables */
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data th {
+  text-align: left; font-weight: 700; color: var(--ink-3); font-size: 11.5px;
+  letter-spacing: .02em; padding: 10px 12px; border-bottom: 1px solid var(--line);
+  background: var(--bg); position: sticky; top: 0; z-index: 1;
+}
+table.data td { padding: 11px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+table.data tbody tr { transition: background .1s; }
+table.data tbody tr:hover { background: var(--accent-soft); }
+table.data tbody tr.sel { background: var(--accent-soft); }
+
+/* Inputs */
+.inp {
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 8px 10px;
+  font-size: 13px; color: var(--ink); background: var(--surface); width: 100%;
+  transition: border-color .12s, box-shadow .12s;
+}
+.inp:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+label.fld { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+
+/* Pin marker */
+.pin {
+  position: absolute; transform: translate(-50%, -100%);
+  width: 26px; height: 26px; cursor: pointer; transition: transform .1s;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.3));
+}
+.pin:hover { transform: translate(-50%, -110%) scale(1.12); z-index: 5; }
