@@ -260,19 +260,79 @@ function PhoneProfile({ profile, setProfile, onBack, flash }) {
   );
 }
 
+/* 黒板を作成（テンプレート様式 — 適用工種/種別/レイアウト/入力項目/プレビュー） */
+function PhoneBoardCreate({ initial, onBack, onCreate }) {
+  const M = window.MOCK;
+  const FIELDS = ["設計値", "実測値", "施工内容", "立会者", "測点", "備考"];
+  const CATEGORIES = ["鉄筋", "コンクリート", "型枠", "鉄骨", "設備", "電気", "仕上", "防水", "共通"];
+  const [d, setD] = useStatePh(initial || { name: "", workType: M.WORK_TYPES[1], category: "鉄筋", layout: "general", reusable: true, active: true, fields: ["設計値", "実測値", "備考"] });
+  const [err, setErr] = useStatePh(false);
+  const [customFld, setCustomFld] = useStatePh("");
+  const f = (k, v) => setD(p => ({ ...p, [k]: v }));
+  const toggleField = (name) => setD(p => ({ ...p, fields: p.fields.includes(name) ? p.fields.filter(x => x !== name) : [...p.fields, name] }));
+  const addCustom = () => { const v = customFld.trim(); if (!v) return; setD(p => ({ ...p, fields: p.fields.includes(v) ? p.fields : [...p.fields, v] })); setCustomFld(""); };
+  const submit = () => { if (!d.name.trim()) { setErr(true); return; } onCreate({ ...d }); };
+  const preview = { workType: d.workType, category: d.category, subcategory: "（テンプレート）", design: d.fields.includes("設計値") ? "—" : undefined, actual: d.fields.includes("実測値") ? "—" : undefined, point: d.fields.includes("測点") ? "—" : undefined, location: "—" };
+  return (
+    <div className="col" style={{ height: "100%" }}>
+      <FieldTopBar title="黒板を作成" onBack={onBack} online={true} setOnline={() => {}} queue={0} />
+      <div className="col" style={{ flex: 1, overflow: "auto", padding: 16, gap: 14, background: "var(--bg)" }}>
+        <div className="col center" style={{ gap: 8 }}>
+          <div className="muted" style={{ fontSize: "calc(11.5px * var(--field-scale))", fontWeight: 700 }}>プレビュー</div>
+          <div style={{ width: 256 }}><Blackboard data={preview} scale={1.05} variant="compact" /></div>
+        </div>
+        <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>テンプレート名 <span style={{ color: "var(--st-redo)" }}>＊必須</span>
+          <input className="inp" value={d.name} onChange={e => f("name", e.target.value)} placeholder="例：配筋検査 標準黒板" style={{ fontSize: "calc(14px * var(--field-scale))", ...(err && !d.name.trim() ? { borderColor: "var(--st-redo)" } : {}) }} />
+          {err && !d.name.trim() && <span style={{ color: "var(--st-redo)", fontSize: 11, fontWeight: 600 }}>テンプレート名を入力してください</span>}
+        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>適用工種<select className="inp" value={d.workType} onChange={e => f("workType", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }}>{M.WORK_TYPES.map(w => <option key={w}>{w}</option>)}</select></label>
+          <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>種別<select className="inp" value={d.category} onChange={e => f("category", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }}>{CATEGORIES.map(c => <option key={c}>{c}</option>)}</select></label>
+        </div>
+        <label className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>レイアウト<select className="inp" value={d.layout} onChange={e => f("layout", e.target.value)} style={{ fontSize: "calc(14px * var(--field-scale))" }}><option value="general">汎用</option><option value="rebar">配筋（豆図枠あり）</option><option value="dimension">出来形（寸法）</option></select></label>
+        <div className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>入力項目（黒板に表示する欄）
+          <div className="row gap-8 wrap" style={{ marginTop: 6 }}>
+            {[...new Set([...FIELDS, ...d.fields])].map(name => { const on = d.fields.includes(name); const custom = !FIELDS.includes(name); return (
+              <button key={name} onClick={() => toggleField(name)} className="chip" style={{ cursor: "pointer", border: "1px solid " + (on ? "var(--accent)" : "var(--line)"), background: on ? "var(--accent-soft)" : "var(--surface)", color: on ? "var(--accent-ink)" : "var(--ink-3)", fontWeight: 700 }}>{on && <Icon name="check" size={12} color="var(--accent-ink)" />}{name}{custom && <span style={{ fontSize: 9, opacity: .7, marginLeft: 2 }}>自由</span>}</button>
+            ); })}
+          </div>
+          <div className="row gap-8" style={{ marginTop: 10 }}>
+            <input className="inp" value={customFld} onChange={e => setCustomFld(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }} placeholder="自由項目を追加（例：気温）" style={{ flex: 1, fontSize: "calc(13px * var(--field-scale))" }} />
+            <button className="btn sm" onClick={addCustom}><Icon name="plus" size={14} />追加</button>
+          </div>
+        </div>
+        <div className="row gap-16" style={{ flexWrap: "wrap" }}>
+          <label className="row gap-6" style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 600, cursor: "pointer" }}><input type="checkbox" checked={d.reusable} onChange={e => f("reusable", e.target.checked)} />他現場へ転用可</label>
+          <label className="row gap-6" style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 600, cursor: "pointer" }}><input type="checkbox" checked={d.active} onChange={e => f("active", e.target.checked)} />有効にする</label>
+        </div>
+      </div>
+      <div className="row gap-10" style={{ padding: 14, borderTop: "1px solid var(--line)", background: "var(--surface)", flex: "none" }}>
+        <button className="btn lg" style={{ flex: 1 }} onClick={onBack}>キャンセル</button>
+        <button className="btn primary lg" style={{ flex: 2 }} onClick={submit}><Icon name="check" size={17} />この黒板で報告する</button>
+      </div>
+    </div>
+  );
+}
+
 /* 現場報告（黒板作成 or 原図 ＋ 音声/手書きコメント → iPad指摘へ送信） */
 function PhoneReport({ profile, onBack, onDone }) {
   const M = window.MOCK;
-  const [kind, setKind] = useStatePh("board"); // board=黒板を作成 / raw=原図のまま
+  const [kind, setKind] = useStatePh("board");
+  const [board, setBoard] = useStatePh(null);   // 作成した黒板様式
+  const [building, setBuilding] = useStatePh(false);
   const [shot, setShot] = useStatePh(false);
   const [hw, setHw] = useStatePh("");
   const [comment, setComment] = useStatePh("");
   const hue = 150 + (comment.length % 6) * 14;
-  const board = { ...(M.blackboards[0]), name: "現場報告 黒板", subcategory: "現場報告", shooter: profile.name };
+  const chooseKind = (k) => { setKind(k); if (k === "board" && !board) setBuilding(true); };
+  const previewBoard = board ? { workType: board.workType, category: board.category, subcategory: board.name || "現場報告 黒板", design: board.fields.includes("設計値") ? "—" : undefined, actual: board.fields.includes("実測値") ? "—" : undefined, point: board.fields.includes("測点") ? "—" : undefined, location: profile.site } : null;
   const submit = () => {
-    window.PhotoStore.submitReport({ kind, comment: comment.trim(), by: profile.name, company: profile.company, role: profile.role, site: profile.site, location: profile.site + " 現場", bbId: kind === "board" ? board.id : null, hue });
+    window.PhotoStore.submitReport({ kind, comment: comment.trim(), by: profile.name, company: profile.company, role: profile.role, site: profile.site, location: profile.site + " 現場", board: kind === "board" ? previewBoard : null, boardName: board ? board.name : null, hue });
     onDone("iPadの指摘へ報告を送信しました（確認待ち）");
   };
+  if (building) {
+    return <PhoneBoardCreate initial={board} onBack={() => { setBuilding(false); if (!board) setKind("raw"); }} onCreate={(b) => { setBoard(b); setBuilding(false); }} />;
+  }
   return (
     <div className="col" style={{ height: "100%" }}>
       <FieldTopBar title="報告を作成" onBack={onBack} online={true} setOnline={() => {}} queue={0} />
@@ -282,19 +342,29 @@ function PhoneReport({ profile, onBack, onDone }) {
           <div className="row gap-6" style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 700, color: "var(--ink-3)" }}><Icon name="board" size={15} />報告の種類を選択</div>
           <div className="row gap-10">
             {[["board", "黒板を作成", "board"], ["raw", "原図のまま", "camera"]].map(([k, label, ic]) => (
-              <button key={k} onClick={() => setKind(k)} className="card" style={{ flex: 1, padding: 14, cursor: "pointer", border: kind === k ? "2px solid var(--accent)" : "2px solid var(--line)", background: kind === k ? "var(--accent-soft)" : "var(--surface)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <button key={k} onClick={() => chooseKind(k)} className="card" style={{ flex: 1, padding: 14, cursor: "pointer", border: kind === k ? "2px solid var(--accent)" : "2px solid var(--line)", background: kind === k ? "var(--accent-soft)" : "var(--surface)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                 <Icon name={ic} size={22} color={kind === k ? "var(--accent-ink)" : "var(--ink-3)"} />
                 <span style={{ fontWeight: 700, fontSize: "calc(13px * var(--field-scale))", color: kind === k ? "var(--accent-ink)" : "var(--ink-2)" }}>{label}</span>
               </button>
             ))}
           </div>
         </div>
+        {/* 作成した黒板 */}
+        {kind === "board" && (
+          <div className="card" style={{ padding: 12 }}>
+            <div className="row spread" style={{ marginBottom: previewBoard ? 10 : 0 }}>
+              <span className="row gap-6" style={{ fontSize: "calc(12.5px * var(--field-scale))", fontWeight: 700, color: "var(--ink-2)" }}><Icon name="board" size={15} color="var(--accent)" />{board ? (board.name || "現場報告 黒板") : "黒板が未作成です"}</span>
+              <button className="btn sm" onClick={() => setBuilding(true)}><Icon name="edit" size={13} />{board ? "編集" : "作成"}</button>
+            </div>
+            {previewBoard && <div className="center"><div style={{ width: 220 }}><Blackboard data={previewBoard} scale={0.95} variant="compact" /></div></div>}
+          </div>
+        )}
         {/* 写真 */}
         <div className="fld" style={{ fontSize: "calc(12.5px * var(--field-scale))" }}>写真
           <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", boxShadow: "var(--sh-2)", marginTop: 4, background: "var(--bg-2)" }}>
             {shot ? <React.Fragment>
               <PhotoFrame hue={hue} rounded={12} style={{ position: "absolute", inset: 0 }} />
-              {kind === "board" && <div style={{ position: "absolute", right: 10, bottom: 10, width: "42%" }}><Blackboard data={board} scale={0.6} variant="compact" /></div>}
+              {kind === "board" && previewBoard && <div style={{ position: "absolute", right: 10, bottom: 10, width: "42%" }}><Blackboard data={previewBoard} scale={0.6} variant="compact" /></div>}
               <button className="btn sm" onClick={() => setShot(false)} style={{ position: "absolute", top: 8, right: 8 }}><Icon name="redo" size={13} />撮り直す</button>
             </React.Fragment> : <button onClick={() => setShot(true)} className="col center" style={{ position: "absolute", inset: 0, border: "none", background: "none", cursor: "pointer", color: "var(--ink-4)", gap: 8 }}><Icon name="camera" size={34} color="var(--ink-4)" /><span style={{ fontSize: "calc(13px * var(--field-scale))", fontWeight: 600 }}>タップして撮影</span></button>}
           </div>

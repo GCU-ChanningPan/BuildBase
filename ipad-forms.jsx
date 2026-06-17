@@ -59,7 +59,7 @@ function IssueHome({ openReport, openDetail, flash }) {
             <span className="chip" style={{ background: "var(--st-pending-soft)", color: "var(--st-pending)" }}><span className="dot" style={{ background: "var(--st-pending)" }}></span>{pendingReports.length} 件</span>
           </div>
           <div className="col gap-10">
-            {pendingReports.map(r => { const b = r.bbId ? M.blackboards.find(x => x.id === r.bbId) : null; return (
+            {pendingReports.map(r => { const b = r.board || (r.bbId ? M.blackboards.find(x => x.id === r.bbId) : null); return (
               <div key={r.id} className="card fade-up" style={{ padding: 14 }}>
                 <div className="row gap-12" style={{ alignItems: "flex-start" }}>
                   <div style={{ position: "relative", width: 124, aspectRatio: "4/3", borderRadius: 8, overflow: "hidden", flex: "none", boxShadow: "var(--sh-1)" }}>
