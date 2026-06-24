@@ -60,11 +60,27 @@ function PhotoManager({ pushToast, go }) {
   const [filter, setFilter] = useStateP("all");
   const [active, setActive] = useStateP(null);
   const [sel, setSel] = useStateP([]);
+  const [fil, setFil] = useStateP({ workType: "all", category: "all", site: "all" });
+  const setF = (k, v) => setFil(p => ({ ...p, [k]: v }));
 
   const confirmed = store.photos.filter(p => p.status === "approved");
   const allPhotos = [...confirmed, ...photos];
+  const bbOf = (p) => M.blackboards.find(b => b.id === p.bbId) || {};
+  const siteOf = (p) => bbOf(p).site || "湾岸ロジ新築";
+  const uniq = (a) => [...new Set(a.filter(Boolean))];
+  const wtOpts = uniq(allPhotos.map(p => bbOf(p).workType));
+  const catOpts = uniq(allPhotos.map(p => bbOf(p).category));
+  const siteOpts = uniq(allPhotos.map(siteOf));
+  const filActive = fil.workType !== "all" || fil.category !== "all" || fil.site !== "all";
+  const clearFil = () => setFil({ workType: "all", category: "all", site: "all" });
   const filters = [["all", "すべて"], ["none", "未撮影"], ["shot", "撮影済み"]];
-  const list = allPhotos.filter(p => filter === "all" || boardStatus(p.status) === filter);
+  const list = allPhotos.filter(p => {
+    const b = bbOf(p);
+    return (filter === "all" || boardStatus(p.status) === filter)
+      && (fil.workType === "all" || b.workType === fil.workType)
+      && (fil.category === "all" || b.category === fil.category)
+      && (fil.site === "all" || siteOf(p) === fil.site);
+  });
   const counts = (k) => allPhotos.filter(p => boardStatus(p.status) === k).length;
 
   function reject(p, reason, comment) { setPhotos(ps => ps.map(x => x.id === p.id ? { ...x, status: "redo", reason, comment } : x)); setActive(null); }
@@ -91,7 +107,13 @@ function PhotoManager({ pushToast, go }) {
           </>}
         </div>
       </div>
-      <div className="row gap-8" style={{ padding: "0 26px 12px", flexWrap: "wrap" }}>
+      <div className="row gap-8" style={{ padding: "0 26px 12px", flexWrap: "wrap", alignItems: "center" }}>
+        <Icon name="filter" size={15} color="var(--ink-4)" />
+        <label className="row gap-6" style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-3)" }}>工種<select className="inp" style={{ width: "auto", padding: "6px 10px", fontSize: 12.5 }} value={fil.workType} onChange={e => setF("workType", e.target.value)}><option value="all">すべて</option>{wtOpts.map(w => <option key={w}>{w}</option>)}</select></label>
+        <label className="row gap-6" style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-3)" }}>種別<select className="inp" style={{ width: "auto", padding: "6px 10px", fontSize: 12.5 }} value={fil.category} onChange={e => setF("category", e.target.value)}><option value="all">すべて</option>{catOpts.map(c => <option key={c}>{c}</option>)}</select></label>
+        <label className="row gap-6" style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-3)" }}>現場<select className="inp" style={{ width: "auto", padding: "6px 10px", fontSize: 12.5 }} value={fil.site} onChange={e => setF("site", e.target.value)}><option value="all">すべて</option>{siteOpts.map(s => <option key={s}>{s}</option>)}</select></label>
+        {filActive && <button className="btn ghost sm" onClick={clearFil}><Icon name="x" size={13} />クリア</button>}
+        <span className="muted" style={{ fontSize: 12, fontWeight: 600 }}>{list.length} 件</span>
         <div className="row gap-8" style={{ marginLeft: "auto", alignItems: "center" }}>
           <button className="btn sm" onClick={() => setSel(allSelected ? [] : visibleIds)}>{allSelected ? "選択解除" : "表示中を全選択"}</button>
           {sel.length > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-ink)" }}>{sel.length} 件選択中</span>}
@@ -102,7 +124,9 @@ function PhotoManager({ pushToast, go }) {
         </div>
       </div>
       <div style={{ flex: 1, overflow: "auto", padding: "0 26px 26px" }}>
-        {view === "grid" ? (
+        {list.length === 0 ? (
+          <div className="muted" style={{ padding: 40, textAlign: "center", fontSize: 13 }}>該当する写真はありません。{filActive && <> <button className="btn ghost sm" onClick={clearFil} style={{ marginLeft: 6 }}><Icon name="x" size={13} />フィルターをクリア</button></>}</div>
+        ) : view === "grid" ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 16 }}>
             {list.map(p => <PhotoCard key={p.id} p={p} b={M.blackboards.find(b => b.id === p.bbId)} selectable sel={sel.includes(p.id)} onSel={() => toggleSel(p.id)} onClick={() => setActive(p)} />)}
           </div>
